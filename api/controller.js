@@ -3,6 +3,7 @@ const pool = require('./db.js');
 const insertExchange = async (req, res) => {
     if (!req.body.exchangeName || !req.body.currency) {
         res.status(500).json({ success: false, error: 'Incorrect body' });
+        return;
     }
 
     try {
@@ -27,6 +28,7 @@ const insertExchange = async (req, res) => {
 const getExchange = async (req, res) => {
     if (!req.params.name) {
         res.status(500).json({ success: false, error: 'Incorrect params' });
+        return;
     }
 
     try {
@@ -48,6 +50,7 @@ const getExchange = async (req, res) => {
 const insertInstrument = async (req, res) => {
     if (!req.params.id || !req.body.symbol) {
         res.status(500).json({ success: false, error: 'Incorrect params/body' });
+        return;
     }
 
     try {
@@ -72,6 +75,7 @@ const insertInstrument = async (req, res) => {
 const getInstrument = async (req, res) => {
     if (!req.params.symbol) {
         res.status(500).json({ success: false, error: 'Incorrect params' });
+        return;
     }
 
     try {
@@ -93,20 +97,22 @@ const getInstrument = async (req, res) => {
 const insertPriceData = async (req, res) => {
     if (!req.params.id || !req.body.data) {
         res.status(500).json({ success: false, error: 'Incorrect params/body' });
+        return;
     }
 
     try {
         let existingDates = [];
         let priceDataInserts = 0;
 
-        const priceDataInsertPromise = await req.body.data.map(async priceData => {
+        const priceDataInsertPromise = await JSON.parse(req.body.data).map(async priceData => {
             const incorrectDataPoint = !priceData.open || !priceData.high
                 || !priceData.low || !priceData.close || !priceData.volume
-                || !priceData.dateTime;
+                || !priceData.date;
             if (incorrectDataPoint) {
                 res.status(500).json({
                     success: false, error: 'Incorrect format of data point'
                 });
+                return;
             }
 
             let priceDataInsert = await pool.query(
@@ -132,11 +138,11 @@ const insertPriceData = async (req, res) => {
                 [
                     req.params.id, priceData.open, priceData.high,
                     priceData.low, priceData.close, priceData.volume,
-                    priceData.dateTime
+                    priceData.date
                 ]
             );
             if (!priceDataInsert.rowCount > 0) {
-                existingDates.push(priceData.dateTime);
+                existingDates.push(priceData.date);
             }
             priceDataInserts += priceDataInsert.rowCount;
         });
@@ -156,6 +162,7 @@ const insertPriceData = async (req, res) => {
 const getPriceData = async (req, res) => {
     if (!req.params.symbol || !req.body.startDateTime || !req.body.endDateTime) {
         res.status(500).json({ success: false, error: 'Incorrect params/body' });
+        return;
     }
 
     try {
