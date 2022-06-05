@@ -7,7 +7,7 @@ const appRouter = require('./routes');
 const app = express();
 
 //app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json());
 app.use('/api', appRouter);
 

@@ -42,7 +42,8 @@ def exchange_post_req(exchange_data):
             "currency": exchange_data['currency']
         }
     )
-    print(exchange_post_res.content) # log res.content
+
+    return exchange_post_res.content # log res.content
 
 
 def exchange_get_req(exchange_name):
@@ -56,7 +57,8 @@ def instrument_post_req(exchange_id, symbol):
         f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/instrument/{exchange_id}',
         data={"symbol": symbol}
     )
-    print(instrument_post_res.content) # log res.content
+
+    return instrument_post_res.content # log res.content
 
 
 def instrument_get_req(symbol):
@@ -70,7 +72,8 @@ def price_data_post_req(instrument_id, df_json):
         f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/price-data/{instrument_id}',
         data={"data": json.dumps(df_json['data'])}
     )
-    print(price_data_post_res.content) # log res.content    
+
+    return price_data_post_res.content # log res.content    
 
 
 def post_daily_data(
@@ -81,7 +84,9 @@ def post_daily_data(
         df = get_yahooquery_data(
             symbol, start_date=start_date, end_date=end_date, omxs_stock=omxs_stock
         )
-        if df is None:
+        print(symbol, len(df))
+
+        if df is None or len(df) == 0:
             df_none_symbols.append(symbol)
             continue
         else:
@@ -96,7 +101,7 @@ def post_daily_data(
             instrument_get_res = instrument_get_req(symbol)
             instrument_id = instrument_get_res['data'][0]['id']
 
-            price_data_post_req(instrument_id, df_json)
+            print(price_data_post_req(instrument_id, df_json))
 
         except Exception:
             print('EXCEPTION', symbol)
@@ -108,11 +113,12 @@ def post_daily_data(
 if __name__ == '__main__':
     INSTRUMENTS_DB = InstrumentsMongoDb(env.LOCALHOST_MONGO_DB_URL, 'instruments_db')
 
-    omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs30_instruments())
-    #omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs_large_cap_instruments()) + \
-    #    json.loads(INSTRUMENTS_DB.get_omxs_mid_cap_instruments())
-    stock_indices_symbols_list = []#stock_indices_symbols()
-    futures_symbols_list = []#futures_symbols()
+    omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs_large_cap_instruments()) + \
+        json.loads(INSTRUMENTS_DB.get_omxs_mid_cap_instruments()) #+
+    #    json.loads(INSTRUMENTS_DB.get_omxs_small_cap_instruments()) +
+    #    json.loads(INSTRUMENTS_DB.get_first_north25_instruments())
+    stock_indices_symbols_list = stock_indices_symbols()
+    futures_symbols_list = futures_symbols()
 
     exchanges_dict = {
         'omxs': {
@@ -132,8 +138,9 @@ if __name__ == '__main__':
         }
     }
 
-    start_date = dt.datetime(2022, 5, 26, tzinfo=pytz.timezone('Europe/Berlin'))
-    end_date = dt.datetime(2022, 6, 2, tzinfo=pytz.timezone('Europe/Berlin'))
+    #start_date = dt.datetime(1995, 1, 1, tzinfo=pytz.timezone('Europe/Berlin'))
+    start_date = dt.datetime(2022, 5, 25, tzinfo=pytz.timezone('Europe/Berlin'))
+    end_date = dt.datetime(2022, 6, 6, tzinfo=pytz.timezone('Europe/Berlin'))
     dt_now = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
 
     print(

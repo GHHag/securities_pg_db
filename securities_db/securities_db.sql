@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS public.price_data
     high_price REAL NOT NULL,
     low_price REAL NOT NULL,
     close_price REAL NOT NUll,
-    volume INTEGER NOT NULL,
+    volume BIGINT NOT NULL,
     date_time TIMESTAMP NOT NULL,
     CONSTRAINT instrument_id_fk FOREIGN KEY(instrument_id) REFERENCES instruments(id)
 )

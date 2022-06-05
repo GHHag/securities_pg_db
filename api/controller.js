@@ -36,7 +36,7 @@ const getExchange = async (req, res) => {
             `
             SELECT id, exchange_name, currency
             FROM exchanges
-            WHERE exchange_name = $1
+            WHERE UPPER(exchange_name) = $1
             `, [req.params.name.toUpperCase()]
         );
 
@@ -83,7 +83,7 @@ const getInstrument = async (req, res) => {
             `
             SELECT id, exchange_id, symbol
             FROM instruments
-            WHERE symbol = $1
+            WHERE UPPER(symbol) = $1
             `, [req.params.symbol.toUpperCase()]
         );
 
@@ -105,9 +105,9 @@ const insertPriceData = async (req, res) => {
         let priceDataInserts = 0;
 
         const priceDataInsertPromise = await JSON.parse(req.body.data).map(async priceData => {
-            const incorrectDataPoint = !priceData.open || !priceData.high
-                || !priceData.low || !priceData.close || !priceData.volume
-                || !priceData.date;
+            const incorrectDataPoint = !priceData.open || !priceData.high ||
+                !priceData.low || !priceData.close ||
+                !priceData.hasOwnProperty('volume') || !priceData.date;
             if (incorrectDataPoint) {
                 res.status(500).json({
                     success: false, error: 'Incorrect format of data point'
@@ -115,7 +115,7 @@ const insertPriceData = async (req, res) => {
                 return;
             }
 
-            let priceDataInsert = await pool.query(
+            /* let priceDataInsert = await pool.query(
                 `
                 WITH
                     check_date AS (
@@ -140,11 +140,39 @@ const insertPriceData = async (req, res) => {
                     priceData.low, priceData.close, priceData.volume,
                     priceData.date
                 ]
+            ); */
+
+            let checkDateQuery = await pool.query(
+                `
+                SELECT instrument_id, date_time
+                FROM price_data
+                WHERE instrument_id = $1
+                AND date_time = $2
+                `, [req.params.id, priceData.date]
             );
-            if (!priceDataInsert.rowCount > 0) {
+            //if (!priceDataInsert.rowCount > 0) {
+            if (checkDateQuery.rowCount > 0) {
                 existingDates.push(priceData.date);
             }
-            priceDataInserts += priceDataInsert.rowCount;
+            else {
+                let priceDataInsert = await pool.query(
+                    `
+                    INSERT INTO price_data(
+                        instrument_id, open_price, high_price, 
+                        low_price, close_price, volume, date_time
+                    )
+                    VALUES(
+                        $1, $2, $3, $4, $5, $6, $7
+                    )
+                    `,
+                    [
+                        req.params.id, priceData.open, priceData.high,
+                        priceData.low, priceData.close, priceData.volume,
+                        priceData.date
+                    ]
+                );
+                priceDataInserts += priceDataInsert.rowCount;
+            }
         });
         await Promise.all(priceDataInsertPromise);
 
@@ -174,11 +202,15 @@ const getPriceData = async (req, res) => {
                 price_data.volume, price_data.date_time AT TIME ZONE 'UTC'
             FROM instruments, price_data
             WHERE instruments.id = price_data.instrument_id
-            AND instruments.symbol = $1
+            AND UPPER(instruments.symbol) = $1
             AND price_data.date_time >= $2
             AND price_data.date_time <= $3
             ORDER BY price_data.date_time
-            `, [req.body.symbol, req.body.startDateTime, req.body.endDateTime]
+            `,
+            [
+                req.body.symbol.toUpperCase(), req.body.startDateTime,
+                req.body.endDateTime
+            ]
         );
 
         res.status(200).json({ data: priceDataQuery.rows, success: true });
