@@ -84,12 +84,12 @@ def post_daily_data(
         df = get_yahooquery_data(
             symbol, start_date=start_date, end_date=end_date, omxs_stock=omxs_stock
         )
-        print(symbol, len(df))
 
         if df is None or len(df) == 0:
             df_none_symbols.append(symbol)
             continue
         else:
+            print(symbol, len(df))
             df_json = json.loads(df.to_json(orient='table'))
 
         try:
@@ -140,7 +140,7 @@ if __name__ == '__main__':
 
     #start_date = dt.datetime(1995, 1, 1, tzinfo=pytz.timezone('Europe/Berlin'))
     start_date = dt.datetime(2022, 5, 25, tzinfo=pytz.timezone('Europe/Berlin'))
-    end_date = dt.datetime(2022, 6, 6, tzinfo=pytz.timezone('Europe/Berlin'))
+    end_date = dt.datetime(2022, 6, 5, tzinfo=pytz.timezone('Europe/Berlin'))
     dt_now = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
 
     print(
