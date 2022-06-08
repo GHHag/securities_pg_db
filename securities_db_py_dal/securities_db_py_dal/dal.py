@@ -6,9 +6,9 @@ import requests
 from yahooquery import Ticker
 
 from instruments_mongo_db.instruments_mongo_db import InstrumentsMongoDb
-from market_data import futures_symbols, stock_indices_symbols
 
-import env
+from securities_db_py_dal.market_data import get_stock_indices_symbols_list, get_futures_symbols_list
+import securities_db_py_dal.env as env
 
 
 def get_yahooquery_data(
@@ -76,6 +76,16 @@ def price_data_post_req(instrument_id, df_json):
     return price_data_post_res.content # log res.content    
 
 
+def price_data_get_req(symbol, start_date_time, end_date_time):
+    return requests.get(
+        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/price-data/{symbol}',
+        data={
+            'startDateTime': start_date_time,
+            'endDateTime': end_date_time
+        }
+    ).json()
+
+
 def post_daily_data(
     symbols_list, exchange_name, start_date, end_date, omxs_stock=False
 ):
@@ -87,25 +97,24 @@ def post_daily_data(
 
         if df is None or len(df) == 0:
             df_none_symbols.append(symbol)
-            continue
         else:
             print(symbol, len(df))
             df_json = json.loads(df.to_json(orient='table'))
 
-        try:
-            exchange_get_res = exchange_get_req(exchange_name)
-            exchange_id = exchange_get_res['data'][0]['id']
+            try:
+                exchange_get_res = exchange_get_req(exchange_name)
+                exchange_id = exchange_get_res['data'][0]['id']
 
-            instrument_post_req(exchange_id, symbol)
+                instrument_post_req(exchange_id, symbol)
 
-            instrument_get_res = instrument_get_req(symbol)
-            instrument_id = instrument_get_res['data'][0]['id']
+                instrument_get_res = instrument_get_req(symbol)
+                instrument_id = instrument_get_res['data'][0]['id']
 
-            print(price_data_post_req(instrument_id, df_json))
+                print(price_data_post_req(instrument_id, df_json))
 
-        except Exception:
-            print('EXCEPTION', symbol)
-            df_none_symbols.append(symbol)
+            except Exception:
+                print('EXCEPTION', symbol)
+                df_none_symbols.append(symbol)
 
     print(df_none_symbols) # log error generating symbols
 
@@ -113,12 +122,13 @@ def post_daily_data(
 if __name__ == '__main__':
     INSTRUMENTS_DB = InstrumentsMongoDb(env.LOCALHOST_MONGO_DB_URL, 'instruments_db')
 
+    #omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs30_instruments())
     omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs_large_cap_instruments()) + \
         json.loads(INSTRUMENTS_DB.get_omxs_mid_cap_instruments()) #+
     #    json.loads(INSTRUMENTS_DB.get_omxs_small_cap_instruments()) +
     #    json.loads(INSTRUMENTS_DB.get_first_north25_instruments())
-    stock_indices_symbols_list = stock_indices_symbols()
-    futures_symbols_list = futures_symbols()
+    stock_indices_symbols_list = get_stock_indices_symbols_list()
+    futures_symbols_list = get_futures_symbols_list()
 
     exchanges_dict = {
         'omxs': {
@@ -140,7 +150,7 @@ if __name__ == '__main__':
 
     #start_date = dt.datetime(1995, 1, 1, tzinfo=pytz.timezone('Europe/Berlin'))
     start_date = dt.datetime(2022, 5, 25, tzinfo=pytz.timezone('Europe/Berlin'))
-    end_date = dt.datetime(2022, 6, 5, tzinfo=pytz.timezone('Europe/Berlin'))
+    end_date = dt.datetime(2022, 6, 7, tzinfo=pytz.timezone('Europe/Berlin'))
     dt_now = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
 
     print(

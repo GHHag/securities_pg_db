@@ -33,7 +33,7 @@ router.post(
 
 // get price data, param :symbol = instruments.symbol
 router.get(
-    '/price-data:symbol',
+    '/price-data/:symbol',
     controller.getPriceData
 );
 

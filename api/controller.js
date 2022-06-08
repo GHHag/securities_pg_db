@@ -199,7 +199,7 @@ const getPriceData = async (req, res) => {
             SELECT instruments.symbol,
                 price_data.open_price, price_data.high_price, 
                 price_data.low_price, price_data.close_price,
-                price_data.volume, price_data.date_time AT TIME ZONE 'UTC'
+                price_data.volume, price_data.date_time AT TIME ZONE 'UTC' AS date_time
             FROM instruments, price_data
             WHERE instruments.id = price_data.instrument_id
             AND UPPER(instruments.symbol) = $1
@@ -208,7 +208,7 @@ const getPriceData = async (req, res) => {
             ORDER BY price_data.date_time
             `,
             [
-                req.body.symbol.toUpperCase(), req.body.startDateTime,
+                req.params.symbol.toUpperCase(), req.body.startDateTime,
                 req.body.endDateTime
             ]
         );
