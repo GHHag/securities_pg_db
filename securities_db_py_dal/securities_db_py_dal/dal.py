@@ -7,7 +7,8 @@ from yahooquery import Ticker
 
 from instruments_mongo_db.instruments_mongo_db import InstrumentsMongoDb
 
-from securities_db_py_dal.market_data import get_stock_indices_symbols_list, get_futures_symbols_list
+from securities_db_py_dal.market_data import get_stock_indices_symbols_list, \
+    get_futures_symbols_list
 import securities_db_py_dal.env as env
 
 
@@ -149,8 +150,9 @@ if __name__ == '__main__':
     }
 
     #start_date = dt.datetime(1995, 1, 1, tzinfo=pytz.timezone('Europe/Berlin'))
-    start_date = dt.datetime(2022, 5, 25, tzinfo=pytz.timezone('Europe/Berlin'))
-    end_date = dt.datetime(2022, 6, 7, tzinfo=pytz.timezone('Europe/Berlin'))
+    start_date = dt.datetime(2022, 6, 1, tzinfo=pytz.timezone('Europe/Berlin'))
+    #end_date = dt.datetime(2022, 6, 10, tzinfo=pytz.timezone('Europe/Berlin'))
+    end_date = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
     dt_now = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
 
     print(
@@ -159,7 +161,7 @@ if __name__ == '__main__':
         f'End date: {end_date.strftime("%d-%m-%Y")}\n'
         f'proceed? y/n'
     )
-    yes_no_input = input('Enter: ')
+    yes_no_input = 'y' # input('Enter: ')
     if yes_no_input.lower() == 'y':
         for exchange, exchange_data in exchanges_dict.items():
             exchange_post_req(exchange_data)
