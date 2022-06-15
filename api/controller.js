@@ -197,9 +197,10 @@ const getPriceData = async (req, res) => {
         let priceDataQuery = await pool.query(
             `
             SELECT instruments.symbol,
-                price_data.open_price, price_data.high_price, 
-                price_data.low_price, price_data.close_price,
-                price_data.volume, price_data.date_time AT TIME ZONE 'UTC' AS date_time
+                price_data.open_price AS "Open", price_data.high_price AS "High", 
+                price_data.low_price AS "Low", price_data.close_price AS "Close",
+                price_data.volume AS "Volume", 
+                price_data.date_time AT TIME ZONE 'UTC' AS "Date" 
             FROM instruments, price_data
             WHERE instruments.id = price_data.instrument_id
             AND UPPER(instruments.symbol) = $1

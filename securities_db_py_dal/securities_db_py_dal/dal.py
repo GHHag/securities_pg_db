@@ -149,9 +149,7 @@ if __name__ == '__main__':
         }
     }
 
-    #start_date = dt.datetime(1995, 1, 1, tzinfo=pytz.timezone('Europe/Berlin'))
     start_date = dt.datetime(2022, 6, 1, tzinfo=pytz.timezone('Europe/Berlin'))
-    #end_date = dt.datetime(2022, 6, 10, tzinfo=pytz.timezone('Europe/Berlin'))
     end_date = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
     dt_now = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
 
