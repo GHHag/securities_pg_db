@@ -1,18 +1,17 @@
 require('dotenv').config();
 const express = require('express');
-//const cors = require('cors');
 const bodyParser = require('body-parser');
-const appRouter = require('./routes');
-
-const app = express();
-
-//app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
-app.use(bodyParser.json());
-app.use('/api', appRouter);
+const router = require('./routes');
 
 const port = process.env.HTTP_PORT;
+const api_url = process.env.API_URL;
 
-app.listen(port, () => {
+const server = express();
+
+server.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+server.use(bodyParser.json());
+server.use(api_url, router);
+
+server.listen(port, () => {
     console.log(`Server live at ${port}`);
 });

@@ -14,7 +14,7 @@ import securities_db_py_dal.env as env
 
 
 def get_yahooquery_data(
-    instrument, *args, 
+    instrument: str, *args, 
     start_date=dt.datetime.now(), end_date=dt.datetime.now(), 
     omxs_stock=False
 ):
@@ -138,10 +138,23 @@ if __name__ == '__main__':
     INSTRUMENTS_DB = InstrumentsMongoDb(env.LOCALHOST_MONGO_DB_URL, 'instruments_db')
 
     #omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs30_instruments())
-    omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs_large_cap_instruments()) + \
-        json.loads(INSTRUMENTS_DB.get_omxs_mid_cap_instruments()) #+
+    #omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs_large_cap_instruments()) + \
+    #    json.loads(INSTRUMENTS_DB.get_omxs_mid_cap_instruments()) #+
     #    json.loads(INSTRUMENTS_DB.get_omxs_small_cap_instruments()) +
     #    json.loads(INSTRUMENTS_DB.get_first_north25_instruments())
+    
+    market_list_ids = [
+        INSTRUMENTS_DB.get_market_list_id('omxs_large_caps'),
+        INSTRUMENTS_DB.get_market_list_id('omxs_mid_caps')
+    ]
+    omxs_stock_symbols_list = []
+    for market_list_id in market_list_ids:
+        omxs_stock_symbols_list += json.loads(
+            INSTRUMENTS_DB.get_market_list_instrument_symbols(
+                market_list_id
+            )
+        )
+    omxs_stock_symbols_list.append('^OMX') # se till att index ticker insertas via samma module som andra instrument tickers insertas via
     stock_indices_symbols_list = get_stock_indices_symbols_list()
     futures_symbols_list = get_futures_symbols_list()
 
