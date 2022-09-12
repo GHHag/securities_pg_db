@@ -6,7 +6,7 @@ import logging
 
 from yahooquery import Ticker
 
-from instruments_mongo_db.instruments_mongo_db import InstrumentsMongoDb
+from tet_doc_db.instruments_mongo_db.instruments_mongo_db import InstrumentsMongoDb
 
 from securities_db_py_dal.market_data import get_stock_indices_symbols_list, \
     get_futures_symbols_list
