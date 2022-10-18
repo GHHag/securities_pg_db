@@ -42,9 +42,9 @@ def get_yahooquery_data(
         data.reset_index(inplace=True)
         return data
     except (KeyError, AttributeError, TypeError):
-        #logging.error(
         critical_logger.error(
-            f'\n\tERROR while trying to fetch data with yhq. Instrument: {instrument}\n'
+            f'\n'
+            f'\tERROR while trying to fetch data with yhq. Instrument: {instrument}'
         )
 
 
@@ -57,8 +57,7 @@ def exchange_post_req(exchange_data):
         }
     )
 
-    #logging.info(f'\n\tEXCHANGE POST REQUEST:\n\t{exchange_post_res.content}\n')
-    base_logger.info(f'\n\tEXCHANGE POST REQUEST:\n\t{exchange_post_res.content}\n')
+    base_logger.info(f'\n\tEXCHANGE POST REQUEST:\n\t{exchange_post_res.content}')
     return exchange_post_res.content
 
 
@@ -74,8 +73,7 @@ def instrument_post_req(exchange_id, symbol):
         data={"symbol": symbol}
     )
 
-    #logging.info(f'\n\tINSTRUMENT POST REQUEST:\n\t{instrument_post_res.content}\n')
-    base_logger.info(f'\n\tINSTRUMENT POST REQUEST:\n\t{instrument_post_res.content}\n')
+    base_logger.info(f'\n\tINSTRUMENT POST REQUEST:\n\t{instrument_post_res.content}')
     return instrument_post_res.content
 
 
@@ -91,8 +89,7 @@ def price_data_post_req(instrument_id, df_json):
         data={"data": json.dumps(df_json['data'])}
     )
 
-    #logging.info(f'\n\tPRICE DATA POST REQUEST:\n\t{price_data_post_res.content}\n')
-    base_logger.info(f'\n\tPRICE DATA POST REQUEST:\n\t{price_data_post_res.content}\n')
+    base_logger.info(f'\n\tPRICE DATA POST REQUEST:\n\t{price_data_post_res.content}')
     return price_data_post_res.content  
 
 
@@ -109,12 +106,12 @@ def price_data_get_req(symbol, start_date_time, end_date_time):
 def post_daily_data(
     symbols_list, exchange_name, start_date, end_date, omxs_stock=False
 ):
+    exception_none_df_symbols = ''
     for symbol in symbols_list:
         df = get_yahooquery_data(
             symbol, start_date=start_date, end_date=end_date, omxs_stock=omxs_stock
         )
 
-        exception_none_df_symbols = ''
         if df is None or len(df) == 0:
             exception_none_df_symbols += f'{symbol}, '
         else:
@@ -129,25 +126,30 @@ def post_daily_data(
                 instrument_get_res = instrument_get_req(symbol)
                 instrument_id = instrument_get_res['data'][0]['id']
 
-                price_data_post_req(instrument_id, df_json)
+                price_data_post_res = json.loads(price_data_post_req(instrument_id, df_json))
+                if len(price_data_post_res['incorrectData']) > 0:
+                    critical_logger.warning(
+                        f'\n'
+                        f'\tINCORRECT DATA for {symbol}:\n'
+                        f'\t{price_data_post_res["incorrectData"]}'
+                    )
+                    print(symbol, price_data_post_res)
 
             except Exception:
-                #logging.error(
                 critical_logger.error(
-                    f'\n\t'
-                    f'EXCEPTION raised while attempting to POST data for {symbol}'
+                    f'\n'
+                    f'\tEXCEPTION raised while attempting to POST data for {symbol}'
                 )
                 exception_none_df_symbols += f'{symbol}, '
 
-    #logging.warning(
     critical_logger.warning(
-        f"\n\t"
-        f"Symbols where conditional: 'df is None or len(df) == 0:' resulted in True\n\t"
-        f"Symbols: {exception_none_df_symbols}\n"
+        f"\n"
+        f"\tSymbols where conditional: 'df is None or len(df) == 0:' resulted in True\n"
+        f"\tSymbols: {exception_none_df_symbols}"
     )
 
 
-def last_date_get_req(instrument_one, instrument_two):#, exchange_name):
+def last_date_get_req(instrument_one, instrument_two):
     last_date_res = requests.get(
         f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/date/?inst1={instrument_one}&inst2={instrument_two}'
     ).json()
@@ -155,7 +157,6 @@ def last_date_get_req(instrument_one, instrument_two):#, exchange_name):
 
 
 if __name__ == '__main__':
-    #logging.basicConfig(filename=f'{env.LOG_FILE_PATH}\stonkinator_log.log', level=logging.INFO)
     base_logger = setup_logger('base', f'{env.LOG_FILE_PATH}\stonkinator_log.log')
     critical_logger = setup_logger('critical', f'{env.LOG_FILE_PATH_CRITICAL}\stonkinator_log_critical.log')
 
@@ -206,17 +207,14 @@ if __name__ == '__main__':
     month = last_inserted_date.month
     day = last_inserted_date.day
     start_date = dt.datetime(year, month, day, tzinfo=pytz.timezone('Europe/berlin'))
-    #start_date = dt.datetime(2022, 6, 25, tzinfo=pytz.timezone('Europe/Berlin'))
     end_date = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
     dt_now = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
 
-    #logging.info(
     base_logger.info(
-        f'\n\t'
-        f'Insert data\n\t'
-        f'Current datetime: {dt_now}\n\t'
-        f'Start date: {start_date.strftime("%d-%m-%Y")}\n\t'
-        f'End date: {end_date.strftime("%d-%m-%Y")}\n'
+        f'Insert data\n'
+        f'Current datetime: {dt_now}\n'
+        f'Start date: {start_date.strftime("%d-%m-%Y")}\n'
+        f'End date: {end_date.strftime("%d-%m-%Y")}'
     )
 
     yes_no_input = 'y' # input('Enter: ')
@@ -232,20 +230,18 @@ if __name__ == '__main__':
                 omxs_stock = True
                 if end_date_today_check and dt_now.hour < 18:
                     end_date = end_date - dt.timedelta(days=1)
-                    #logging.info(
                     base_logger.info(
-                        f'\n\t'
-                        f'Date check (omxs): {end_date_today_check}, subtracting one day\n\t'
-                        f'New end date: {end_date}\n'
+                        f'\n'
+                        f'\tDate check (omxs): {end_date_today_check}, subtracting one day\n'
+                        f'\tNew end date: {end_date}'
                     )
             else:
                 if end_date_today_check:
                     end_date = end_date - dt.timedelta(days=1)
-                    #logging.info(
                     base_logger.info(
-                        f'\n\t'
-                        f'Date check: {end_date_today_check}, subtracting one day\n\t'
-                        f'New end date: {end_date}\n'
+                        f'\n'
+                        f'\tDate check: {end_date_today_check}, subtracting one day\n'
+                        f'\tNew end date: {end_date}'
                     )
 
             post_daily_data(
