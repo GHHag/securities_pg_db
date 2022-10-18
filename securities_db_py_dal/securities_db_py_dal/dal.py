@@ -5,12 +5,21 @@ import requests
 import logging
 
 from yahooquery import Ticker
+import pandas as pd
 
 from tet_doc_db.instruments_mongo_db.instruments_mongo_db import InstrumentsMongoDb
 
 from securities_db_py_dal.market_data import get_stock_indices_symbols_list, \
     get_futures_symbols_list
 import securities_db_py_dal.env as env
+
+
+def setup_logger(name, log_file, level=logging.INFO):
+    handler = logging.FileHandler(log_file)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    return logger 
 
 
 def get_yahooquery_data(
@@ -33,7 +42,8 @@ def get_yahooquery_data(
         data.reset_index(inplace=True)
         return data
     except (KeyError, AttributeError, TypeError):
-        logging.error(
+        #logging.error(
+        critical_logger.error(
             f'\n\tERROR while trying to fetch data with yhq. Instrument: {instrument}\n'
         )
 
@@ -47,7 +57,8 @@ def exchange_post_req(exchange_data):
         }
     )
 
-    logging.info(f'\n\tEXCHANGE POST REQUEST:\n\t{exchange_post_res.content}\n')
+    #logging.info(f'\n\tEXCHANGE POST REQUEST:\n\t{exchange_post_res.content}\n')
+    base_logger.info(f'\n\tEXCHANGE POST REQUEST:\n\t{exchange_post_res.content}\n')
     return exchange_post_res.content
 
 
@@ -63,7 +74,8 @@ def instrument_post_req(exchange_id, symbol):
         data={"symbol": symbol}
     )
 
-    logging.info(f'\n\tINSTRUMENT POST REQUEST:\n\t{instrument_post_res.content}\n')
+    #logging.info(f'\n\tINSTRUMENT POST REQUEST:\n\t{instrument_post_res.content}\n')
+    base_logger.info(f'\n\tINSTRUMENT POST REQUEST:\n\t{instrument_post_res.content}\n')
     return instrument_post_res.content
 
 
@@ -79,7 +91,8 @@ def price_data_post_req(instrument_id, df_json):
         data={"data": json.dumps(df_json['data'])}
     )
 
-    logging.info(f'\n\tPRICE DATA POST REQUEST:\n\t{price_data_post_res.content}\n')
+    #logging.info(f'\n\tPRICE DATA POST REQUEST:\n\t{price_data_post_res.content}\n')
+    base_logger.info(f'\n\tPRICE DATA POST REQUEST:\n\t{price_data_post_res.content}\n')
     return price_data_post_res.content  
 
 
@@ -119,21 +132,32 @@ def post_daily_data(
                 price_data_post_req(instrument_id, df_json)
 
             except Exception:
-                logging.error(
+                #logging.error(
+                critical_logger.error(
                     f'\n\t'
                     f'EXCEPTION raised while attempting to POST data for {symbol}'
                 )
                 exception_none_df_symbols += f'{symbol}, '
 
-    logging.warning(
+    #logging.warning(
+    critical_logger.warning(
         f"\n\t"
         f"Symbols where conditional: 'df is None or len(df) == 0:' resulted in True\n\t"
         f"Symbols: {exception_none_df_symbols}\n"
     )
 
 
+def last_date_get_req(instrument_one, instrument_two):#, exchange_name):
+    last_date_res = requests.get(
+        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/date/?inst1={instrument_one}&inst2={instrument_two}'
+    ).json()
+    return last_date_res['date']
+
+
 if __name__ == '__main__':
-    logging.basicConfig(filename=f'{env.LOG_FILE_PATH}\stonkinator_log.log', level=logging.INFO)
+    #logging.basicConfig(filename=f'{env.LOG_FILE_PATH}\stonkinator_log.log', level=logging.INFO)
+    base_logger = setup_logger('base', f'{env.LOG_FILE_PATH}\stonkinator_log.log')
+    critical_logger = setup_logger('critical', f'{env.LOG_FILE_PATH_CRITICAL}\stonkinator_log_critical.log')
 
     INSTRUMENTS_DB = InstrumentsMongoDb(env.LOCALHOST_MONGO_DB_URL, 'instruments_db')
 
@@ -176,11 +200,18 @@ if __name__ == '__main__':
         }
     }
 
-    start_date = dt.datetime(2022, 6, 25, tzinfo=pytz.timezone('Europe/Berlin'))
+    last_inserted_date = last_date_get_req('^OMX', '^SPX')
+    last_inserted_date = pd.Timestamp(last_inserted_date)
+    year = last_inserted_date.year
+    month = last_inserted_date.month
+    day = last_inserted_date.day
+    start_date = dt.datetime(year, month, day, tzinfo=pytz.timezone('Europe/berlin'))
+    #start_date = dt.datetime(2022, 6, 25, tzinfo=pytz.timezone('Europe/Berlin'))
     end_date = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
     dt_now = dt.datetime.now(tz=pytz.timezone('Europe/Berlin'))
 
-    logging.info(
+    #logging.info(
+    base_logger.info(
         f'\n\t'
         f'Insert data\n\t'
         f'Current datetime: {dt_now}\n\t'
@@ -201,7 +232,8 @@ if __name__ == '__main__':
                 omxs_stock = True
                 if end_date_today_check and dt_now.hour < 18:
                     end_date = end_date - dt.timedelta(days=1)
-                    logging.info(
+                    #logging.info(
+                    base_logger.info(
                         f'\n\t'
                         f'Date check (omxs): {end_date_today_check}, subtracting one day\n\t'
                         f'New end date: {end_date}\n'
@@ -209,7 +241,8 @@ if __name__ == '__main__':
             else:
                 if end_date_today_check:
                     end_date = end_date - dt.timedelta(days=1)
-                    logging.info(
+                    #logging.info(
+                    base_logger.info(
                         f'\n\t'
                         f'Date check: {end_date_today_check}, subtracting one day\n\t'
                         f'New end date: {end_date}\n'

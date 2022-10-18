@@ -221,11 +221,55 @@ const getPriceData = async (req, res) => {
     }
 }
 
+const getLastDate = async (req, res) => {
+    if (!req.query.inst1 || !req.query.inst2) {
+        res.status(500).json({ success: false, error: 'Incorrect params' });
+        return;
+    }
+
+    try {
+        let dateQuery = await pool.query(
+            `
+                WITH instrument_one_dates AS (
+                    SELECT date_time
+                    FROM instruments, price_data
+                    WHERE instruments.id = price_data.instrument_id
+                    AND UPPER(instruments.symbol) = $1
+                    ORDER BY price_data.date_time DESC
+                    LIMIT 20
+                ),
+                instrument_two_dates AS (
+                    SELECT date_time
+                    FROM instruments, price_data
+                    WHERE instruments.id = price_data.instrument_id
+                    AND UPPER(instruments.symbol) = $2
+                    ORDER BY price_data.date_time DESC
+                    LIMIT 20
+                )
+                SELECT *
+                FROM instrument_one_dates
+                UNION
+                SELECT *
+                FROM instrument_two_dates
+                ORDER BY date_time
+                LIMIT 1
+            `,
+            [req.query.inst1.toUpperCase(), req.query.inst2.toUpperCase()]
+        );
+
+        res.status(200).json({ success: true, date: dateQuery.rows[0].date_time });
+    }
+    catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+}
+
 module.exports = {
     insertExchange,
     getExchange,
     insertInstrument,
     getInstrument,
     insertPriceData,
-    getPriceData
+    getPriceData,
+    getLastDate
 }
