@@ -107,6 +107,7 @@ def post_daily_data(
     symbols_list, exchange_name, start_date, end_date, omxs_stock=False
 ):
     exception_none_df_symbols = ''
+    incorrect_data_symbols = ''
     for symbol in symbols_list:
         df = get_yahooquery_data(
             symbol, start_date=start_date, end_date=end_date, omxs_stock=omxs_stock
@@ -133,6 +134,7 @@ def post_daily_data(
                         f'\tINCORRECT DATA for {symbol}:\n'
                         f'\t{price_data_post_res["incorrectData"]}'
                     )
+                    incorrect_data_symbols += f'{symbol}, '
                     print(symbol, price_data_post_res)
 
             except Exception:
@@ -145,7 +147,9 @@ def post_daily_data(
     critical_logger.warning(
         f"\n"
         f"\tSymbols where conditional: 'df is None or len(df) == 0:' resulted in True\n"
-        f"\tSymbols: {exception_none_df_symbols}"
+        f"\tSymbols: {exception_none_df_symbols}\n"
+        f"\tSymbols with incorrect data:\n"
+        f"\tSymbols: {incorrect_data_symbols}"
     )
 
 
@@ -157,8 +161,8 @@ def last_date_get_req(instrument_one, instrument_two):
 
 
 if __name__ == '__main__':
-    base_logger = setup_logger('base', f'{env.LOG_FILE_PATH}\stonkinator_log.log')
-    critical_logger = setup_logger('critical', f'{env.LOG_FILE_PATH_CRITICAL}\stonkinator_log_critical.log')
+    base_logger = setup_logger('base', f'{env.LOG_FILE_PATH}\log.log')
+    critical_logger = setup_logger('critical', f'{env.LOG_FILE_PATH_CRITICAL}\log_critical.log')
 
     INSTRUMENTS_DB = InstrumentsMongoDb(env.LOCALHOST_MONGO_DB_URL, 'instruments_db')
 
@@ -216,6 +220,12 @@ if __name__ == '__main__':
         f'Start date: {start_date.strftime("%d-%m-%Y")}\n'
         f'End date: {end_date.strftime("%d-%m-%Y")}'
     )
+    critical_logger.info(
+        f'Insert data\n'
+        f'Current datetime: {dt_now}\n'
+        f'Start date: {start_date.strftime("%d-%m-%Y")}\n'
+        f'End date: {end_date.strftime("%d-%m-%Y")}'
+    )
 
     yes_no_input = 'y' # input('Enter: ')
     if yes_no_input.lower() == 'y':
@@ -232,16 +242,16 @@ if __name__ == '__main__':
                     end_date = end_date - dt.timedelta(days=1)
                     base_logger.info(
                         f'\n'
-                        f'\tDate check (omxs): {end_date_today_check}, subtracting one day\n'
-                        f'\tNew end date: {end_date}'
+                        f'Date check (omxs): {end_date_today_check}, subtracting one day\n'
+                        f'New end date: {end_date}'
                     )
             else:
                 if end_date_today_check:
                     end_date = end_date - dt.timedelta(days=1)
                     base_logger.info(
                         f'\n'
-                        f'\tDate check: {end_date_today_check}, subtracting one day\n'
-                        f'\tNew end date: {end_date}'
+                        f'Date check: {end_date_today_check}, subtracting one day\n'
+                        f'New end date: {end_date}'
                     )
 
             post_daily_data(
