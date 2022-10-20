@@ -43,8 +43,7 @@ def get_yahooquery_data(
         return data
     except (KeyError, AttributeError, TypeError):
         critical_logger.error(
-            f'\n'
-            f'\tERROR while trying to fetch data with yhq. Instrument: {instrument}'
+            f'\n\tERROR while trying to fetch data with yhq. Instrument: {instrument}'
         )
 
 
@@ -73,7 +72,7 @@ def instrument_post_req(exchange_id, symbol):
         data={"symbol": symbol}
     )
 
-    base_logger.info(f'\n\tINSTRUMENT POST REQUEST:\n\t{instrument_post_res.content}')
+    base_logger.info(f'\n\tINSTRUMENT POST REQUEST ({symbol}):\n\t{instrument_post_res.content}')
     return instrument_post_res.content
 
 
@@ -230,6 +229,9 @@ if __name__ == '__main__':
     yes_no_input = 'y' # input('Enter: ')
     if yes_no_input.lower() == 'y':
         for exchange, exchange_data in exchanges_dict.items():
+            base_logger.info(
+                f'\nSeeding data for {exchange} instruments'
+            )
             exchange_post_req(exchange_data)
 
             end_date_today_check = dt_now.year == end_date.year and \
@@ -242,16 +244,16 @@ if __name__ == '__main__':
                     end_date = end_date - dt.timedelta(days=1)
                     base_logger.info(
                         f'\n'
-                        f'Date check (omxs): {end_date_today_check}, subtracting one day\n'
-                        f'New end date: {end_date}'
+                        f'\tDate check: {end_date_today_check}, subtracting one day\n'
+                        f'\tNew end date: {end_date}'
                     )
             else:
                 if end_date_today_check:
                     end_date = end_date - dt.timedelta(days=1)
                     base_logger.info(
                         f'\n'
-                        f'Date check: {end_date_today_check}, subtracting one day\n'
-                        f'New end date: {end_date}'
+                        f'\tDate check: {end_date_today_check}, subtracting one day\n'
+                        f'\tNew end date: {end_date}'
                     )
 
             post_daily_data(
@@ -259,3 +261,6 @@ if __name__ == '__main__':
                 start_date=start_date, end_date=end_date, 
                 omxs_stock=omxs_stock
             )
+
+    base_logger.info('\n------------------------------------------------------------------------\n')
+    critical_logger.info('\n------------------------------------------------------------------------\n')
