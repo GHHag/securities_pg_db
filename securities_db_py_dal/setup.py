@@ -13,5 +13,5 @@ setup(
     author='GHHag',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['yahooquery']#, 'instruments_mongo_db']
+    install_requires=['yahooquery', 'pandas']#, 'instruments_mongo_db']
 )
