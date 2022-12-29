@@ -160,17 +160,12 @@ def last_date_get_req(instrument_one, instrument_two):
 
 
 if __name__ == '__main__':
-    base_logger = setup_logger('base', f'{env.LOG_FILE_PATH}\log.log')
-    critical_logger = setup_logger('critical', f'{env.LOG_FILE_PATH_CRITICAL}\log_critical.log')
+    base_logger = setup_logger('base', f'{env.LOG_FILE_PATH}log.log')
+    critical_logger = setup_logger('critical', f'{env.LOG_FILE_PATH_CRITICAL}log_critical.log')
 
-    INSTRUMENTS_DB = InstrumentsMongoDb(env.LOCALHOST_MONGO_DB_URL, 'instruments_db')
+    #INSTRUMENTS_DB = InstrumentsMongoDb(env.LOCALHOST_MONGO_DB_URL, 'instruments_db')
+    INSTRUMENTS_DB = InstrumentsMongoDb(env.ATLAS_MONGO_DB_URL, 'client_db')
 
-    #omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs30_instruments())
-    #omxs_stock_symbols_list = json.loads(INSTRUMENTS_DB.get_omxs_large_cap_instruments()) + \
-    #    json.loads(INSTRUMENTS_DB.get_omxs_mid_cap_instruments()) #+
-    #    json.loads(INSTRUMENTS_DB.get_omxs_small_cap_instruments()) +
-    #    json.loads(INSTRUMENTS_DB.get_first_north25_instruments())
-    
     market_list_ids = [
         INSTRUMENTS_DB.get_market_list_id('omxs_large_caps'),
         INSTRUMENTS_DB.get_market_list_id('omxs_mid_caps')
@@ -182,7 +177,7 @@ if __name__ == '__main__':
                 market_list_id
             )
         )
-    omxs_stock_symbols_list.append('^OMX') # se till att index ticker insertas via samma module som andra instrument tickers insertas via
+    omxs_stock_symbols_list.append('^OMX')
     stock_indices_symbols_list = get_stock_indices_symbols_list()
     futures_symbols_list = get_futures_symbols_list()
 
