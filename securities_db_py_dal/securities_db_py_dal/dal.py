@@ -49,7 +49,7 @@ def get_yahooquery_data(
 
 def exchange_post_req(exchange_data):
     exchange_post_res = requests.post(
-        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/exchange',
+        f'http://{env.API_HOST}:{env.API_PORT}{env.API_URL}/exchange',
         data={
             "exchangeName": exchange_data['name'], 
             "currency": exchange_data['currency']
@@ -62,13 +62,13 @@ def exchange_post_req(exchange_data):
 
 def exchange_get_req(exchange_name):
     return requests.get(
-        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/exchange/{exchange_name}',
+        f'http://{env.API_HOST}:{env.API_PORT}{env.API_URL}/exchange/{exchange_name}',
     ).json()
 
 
 def instrument_post_req(exchange_id, symbol):
     instrument_post_res = requests.post(
-        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/instrument/{exchange_id}',
+        f'http://{env.API_HOST}:{env.API_PORT}{env.API_URL}/instrument/{exchange_id}',
         data={"symbol": symbol}
     )
 
@@ -78,13 +78,13 @@ def instrument_post_req(exchange_id, symbol):
 
 def instrument_get_req(symbol):
     return requests.get(
-        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/instrument/{symbol}'
+        f'http://{env.API_HOST}:{env.API_PORT}{env.API_URL}/instrument/{symbol}'
     ).json()
 
 
 def price_data_post_req(instrument_id, df_json):
     price_data_post_res = requests.post(
-        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/price-data/{instrument_id}',
+        f'http://{env.API_HOST}:{env.API_PORT}{env.API_URL}/price-data/{instrument_id}',
         data={"data": json.dumps(df_json['data'])}
     )
 
@@ -94,7 +94,7 @@ def price_data_post_req(instrument_id, df_json):
 
 def price_data_get_req(symbol, start_date_time, end_date_time):
     return requests.get(
-        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/price-data/{symbol}',
+        f'http://{env.API_HOST}:{env.API_PORT}{env.API_URL}/price-data/{symbol}',
         data={
             'startDateTime': start_date_time,
             'endDateTime': end_date_time
@@ -154,7 +154,7 @@ def post_daily_data(
 
 def last_date_get_req(instrument_one, instrument_two):
     last_date_res = requests.get(
-        f'http://{env.DATABASE_HOST}:{env.HTTP_PORT}{env.API_URL}/date/?inst1={instrument_one}&inst2={instrument_two}'
+        f'http://{env.API_HOST}:{env.API_PORT}{env.API_URL}/date/?inst1={instrument_one}&inst2={instrument_two}'
     ).json()
     return last_date_res['date']
 

@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const router = require('./routes');
 
-const port = process.env.HTTP_PORT;
+const port = process.env.API_PORT;
 const api_url = process.env.API_URL;
 
 const server = express();
